@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timeline Audio V9.0</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background: #0f0f0f; color: white; padding: 16px; margin: 0;
+}
+body.light-mode { background: #e8e8e8; color: #1a1a1a; }
+
+/* BOUTONS */
+.btn {
+  border: 2px solid rgba(255,255,255,0.12); cursor: pointer; font-size: 14px;
+  transition: all 0.15s; background: linear-gradient(180deg,#2a2a2a,#151515);
+  color: white; border-radius: 8px; padding: 8px 12px; font-family: inherit;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+body.light-mode .btn { background: linear-gradient(180deg,#f0f0f0,#ddd); color: #1a1a1a; border-color: rgba(0,0,0,0.12); }
+.btn:hover { filter: brightness(1.2); transform: scale(1.04); }
+.btn:active { transform: scale(0.95); }
+.btn.sq { width: 44px; height: 44px; padding: 0; font-size: 18px; }
+.btn.active-tab { background: linear-gradient(180deg,#4a90e2,#2c6fb8); border-color: #4a90e2; color: white; }
+.btn.active { background: linear-gradient(180deg,#4a90e2,#2c6fb8); border-color: #4a90e2; color: white; }
+
+.play-btn {
+  width: 80px; height: 80px; border-radius: 20px; font-size: 30px;
+  background: linear-gradient(180deg,#2a2a2a,#151515);
+  border: 2px solid rgba(255,255,255,0.10);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  color: white; cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+body.light-mode .play-btn { background: linear-gradient(180deg,#f0f0f0,#ddd); color:#1a1a1a; }
+.play-btn:hover { filter: brightness(1.15); transform: scale(1.04); }
+.play-btn:active { transform: scale(0.96); }
+
+/* HEADER */
+.header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+#projectName {
+  font-size: 18px; font-weight: bold; background: transparent;
+  border: none; color: white; width: 160px; outline: none; padding: 4px;
+}
+body.light-mode #projectName { color: #1a1a1a; }
+
+.time-badge {
+  font-family: monospace; font-size: 13px; background: rgba(0,0,0,0.4);
+  padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+}
+body.light-mode .time-badge { background: rgba(255,255,255,0.6); color: #1a1a1a; border-color: rgba(0,0,0,0.1); }
+
+/* MASTER PROGRESS */
+.master-wrap {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 5px 11px; cursor: pointer; transition: filter 0.2s;
+}
+body.light-mode .master-wrap { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
+.master-wrap:hover { filter: brightness(1.2); }
+.master-bar { width: 90px; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; }
+body.light-mode .master-bar { background: rgba(0,0,0,0.1); }
+.master-fill { height: 100%; width: 0%; border-radius: 5px; transition: width 0.3s, background 0.5s; background: #27ae60; }
+.master-pct { font-size: 12px; font-weight: bold; min-width: 34px; text-align: right; }
+
+/* TIMELINES */
+.tl-wrap { display: flex; flex-direction: column; gap: 10px; }
+.tl-block { background: #1a1a1a; border-radius: 10px; overflow: hidden; }
+body.light-mode .tl-block { background: #f0f0f0; }
+.tl-header { display: flex; justify-content: space-between; align-items: center; padding: 7px 12px; }
+.tl-title { font-size: 13px; font-weight: bold; cursor: pointer; padding: 3px 7px; border-radius: 6px; }
+.tl-title:hover { background: rgba(255,255,255,0.08); }
+body.light-mode .tl-title:hover { background: rgba(0,0,0,0.08); }
+.tl-nav { display: flex; gap: 8px; align-items: center; }
+.tl-badge { font-size: 11px; color: #888; }
+
+.tl-track {
+  height: 62px; overflow-x: auto; overflow-y: hidden;
+  background: #111; border-top: 1px solid #222; cursor: crosshair; position: relative;
+}
+body.light-mode .tl-track { background: #fafafa; border-top-color: #ddd; }
+.tl-track::-webkit-scrollbar { height: 6px; }
+.tl-track::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+body.light-mode .tl-track::-webkit-scrollbar-thumb { background: #bbb; }
+.tl-inner { position: relative; height: 100%; }
+
+/* BLOCS */
+.block {
+  position: absolute; top: 5px; height: 52px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: bold; color: white; cursor: pointer;
+  overflow: hidden; user-select: none; border: 2px solid transparent;
+  transition: border-color 0.15s, filter 0.15s;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6); padding: 0 4px; text-align: center;
+}
+.block:hover { filter: brightness(1.1); }
+.block.selected { border-color: rgba(255,255,255,0.9); box-shadow: 0 0 0 2px rgba(255,255,255,0.2); }
+.resize-handle {
+  position: absolute; top: 0; right: 0; width: 8px; height: 100%;
+  cursor: ew-resize; background: rgba(255,255,255,0.25); border-radius: 0 4px 4px 0;
+  opacity: 0; transition: opacity 0.2s;
+}
+.block:hover .resize-handle { opacity: 1; }
+
+/* CURSEUR */
+.cursor { position: absolute; top: 0; width: 2px; height: 100%; background: red; z-index: 10; pointer-events: none; }
+.cursor-handle {
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent;
+  border-top: 8px solid red; cursor: grab; pointer-events: auto; z-index: 11;
+}
+.cursor-handle:active { cursor: grabbing; }
+
+.hidden { display: none !important; }
+
+/* CONTROLS */
+.controls { margin-top: 14px; display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; }
+.ctrl-grp { display: flex; gap: 8px; align-items: center; }
+
+/* MAIN AREA */
+.main-area { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+@media (max-width: 860px) { .main-area { grid-template-columns: 1fr; } }
+
+.panel { background: #1a1a1a; padding: 16px; border-radius: 10px; }
+body.light-mode .panel { background: #f0f0f0; }
+.panel h3 { margin: 0 0 12px 0; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
+.panel-sub { font-size: 11px; color: #888; font-weight: normal; }
+
+.field {
+  width: 100%; background: #111; color: white; border: 1px solid #333;
+  padding: 7px 9px; border-radius: 6px; font-family: inherit; font-size: 13px;
+  outline: none; margin-bottom: 8px; display: block;
+}
+body.light-mode .field { background: #fff; color: #1a1a1a; border-color: #ddd; }
+textarea.field { resize: vertical; min-height: 52px; }
+
+.panel-actions { display: flex; gap: 8px; margin: 6px 0 14px 0; flex-wrap: wrap; }
+
+/* TODO */
+.todo-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.todo-title { font-size: 13px; font-weight: bold; color: #bbb; }
+body.light-mode .todo-title { color: #555; }
+
+.todo-list { display: flex; flex-direction: column; gap: 4px; max-height: 260px; overflow-y: auto; padding-right: 2px; }
+.todo-list::-webkit-scrollbar { width: 5px; }
+.todo-list::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+
+.todo-item {
+  display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+  background: rgba(255,255,255,0.04); border-radius: 7px; transition: background 0.15s;
+}
+body.light-mode .todo-item { background: rgba(0,0,0,0.04); }
+.todo-item:hover { background: rgba(255,255,255,0.09); }
+body.light-mode .todo-item:hover { background: rgba(0,0,0,0.09); }
+
+.todo-check {
+  width: 22px; height: 22px; border-radius: 5px; border: 2px solid rgba(255,255,255,0.25);
+  cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; transition: all 0.15s; background: transparent;
+}
+.todo-check.done-check { border-color: transparent; }
+.todo-check.done-check::after { content: "✓"; color: white; font-weight: bold; }
+
+.todo-text {
+  flex: 1; font-size: 13px; outline: none; background: transparent;
+  border: none; color: inherit; font-family: inherit; padding: 1px 0;
+}
+.todo-text.done-text { text-decoration: line-through; opacity: 0.5; }
+
+.color-dot {
+  width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.2); transition: transform 0.15s;
+}
+.color-dot:hover { transform: scale(1.3); }
+
+.todo-rm { background: none; border: none; color: #666; cursor: pointer; font-size: 17px; padding: 0 2px; transition: color 0.15s; }
+.todo-rm:hover { color: #e74c3c; }
+
+/* AJOUT TACHE */
+.add-row { display: flex; gap: 6px; margin-top: 8px; align-items: center; }
+.add-input {
+  flex: 1; background: #111; color: white; border: 1px solid #333;
+  padding: 6px 9px; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none;
+}
+body.light-mode .add-input { background: #fff; color: #1a1a1a; border-color: #ddd; }
+
+/* PALETTE */
+.palette-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.swatch {
+  width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
+  border: 3px solid transparent; transition: all 0.15s;
+}
+.swatch:hover { transform: scale(1.15); }
+.swatch.sel { border-color: white; box-shadow: 0 0 0 2px rgba(255,255,255,0.3); }
+body.light-mode .swatch.sel { border-color: #333; }
+
+/* MASTER TODO */
+.master-toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.toggle-btn { background: none; border: none; color: #aaa; cursor: pointer; font-size: 13px; font-family: inherit; transition: color 0.15s; }
+.toggle-btn:hover { color: white; }
+body.light-mode .toggle-btn { color: #666; }
+body.light-mode .toggle-btn:hover { color: #1a1a1a; }
+
+.filter-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.filter-lbl { font-size: 11px; color: #888; }
+.filter-all {
+  font-size: 11px; padding: 3px 9px; border-radius: 10px;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  color: white; cursor: pointer; transition: all 0.15s;
+}
+body.light-mode .filter-all { background: rgba(0,0,0,0.08); border-color: rgba(0,0,0,0.15); color: #1a1a1a; }
+.filter-all:hover, .filter-all.on { background: rgba(255,255,255,0.25); }
+body.light-mode .filter-all:hover, body.light-mode .filter-all.on { background: rgba(0,0,0,0.18); }
+.filter-btn {
+  width: 24px; height: 24px; border-radius: 50%; border: 3px solid transparent;
+  cursor: pointer; transition: all 0.15s;
+}
+.filter-btn:hover { transform: scale(1.15); }
+.filter-btn.on { border-color: white; box-shadow: 0 0 0 2px rgba(255,255,255,0.3); }
+body.light-mode .filter-btn.on { border-color: #333; }
+
+.master-list { display: flex; flex-direction: column; gap: 6px; max-height: 380px; overflow-y: auto; }
+.master-list::-webkit-scrollbar { width: 5px; }
+.master-list::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+.m-group { margin-bottom: 6px; }
+.m-group-lbl { font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; padding: 0 4px; }
+body.light-mode .m-group-lbl { color: #999; }
+.m-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; background: rgba(255,255,255,0.03); border-radius: 6px; }
+body.light-mode .m-item { background: rgba(0,0,0,0.03); }
+.m-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+.m-text { flex: 1; font-size: 13px; }
+.m-text.done-text { text-decoration: line-through; opacity: 0.45; }
+.m-check {
+  width: 18px; height: 18px; border-radius: 4px; border: 2px solid #666;
+  cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; transition: all 0.15s;
+}
+.m-check.done-check { border-color: transparent; }
+.m-check.done-check::after { content: "✓"; color: white; font-weight: bold; }
+
+.status-line { margin-top: 10px; font-size: 12px; color: #888; min-height: 16px; }
+body.light-mode .status-line { color: #666; }
+.no-block { font-size: 13px; color: #666; font-style: italic; }
+body.light-mode .no-block { color: #aaa; }
+
+/* ZOOM BADGE */
+#zoomBadge {
+  position: fixed; bottom: 16px; right: 16px; background: rgba(0,0,0,0.75);
+  border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 4px 12px;
+  font-size: 12px; color: #ccc; pointer-events: none; opacity: 0; transition: opacity 0.4s;
+}
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="header">
+  <input id="projectName" value="Mon Projet" title="Renommer">
+  <button class="btn sq" id="audioBtn" title="Importer audio">🎵</button>
+  <input type="file" id="audioFile" accept="audio/*" style="display:none">
+  <button class="btn sq" id="lockBtn" title="Verrouiller">🔓</button>
+  <button class="btn sq active" id="disp1">1</button>
+  <button class="btn sq" id="disp2">2</button>
+  <button class="btn sq" id="disp3">3</button>
+  <button class="btn sq" id="themeBtn" title="Thème">🌙</button>
+  <div class="time-badge" id="timeBadge">00:00 / 00:00</div>
+  <div class="master-wrap" id="masterWrap" title="Progression globale">
+    <span>✅</span>
+    <div class="master-bar"><div class="master-fill" id="masterFill"></div></div>
+    <span class="master-pct" id="masterPct">0%</span>
+  </div>
+  <button class="btn sq" id="exportBtn" title="Exporter JSON">💾</button>
+  <button class="btn sq" id="importBtn" title="Importer JSON">📂</button>
+  <input type="file" id="importFile" accept=".json" style="display:none">
+</div>
+
+<!-- ===== TIMELINES ===== -->
+<div class="tl-wrap">
+  <div class="tl-block" id="wrapA">
+    <div class="tl-header">
+      <div class="tl-title" id="titleA">Timeline A</div>
+      <div class="tl-nav">
+        <span class="tl-badge" id="badgeA">● A</span>
+        <button class="btn sq active-tab" id="tabA" onclick="setActive('A')">A</button>
+      </div>
+    </div>
+    <div class="tl-track" id="trackA"><div class="tl-inner" id="innerA"></div></div>
+  </div>
+  <div class="tl-block hidden" id="wrapB">
+    <div class="tl-header">
+      <div class="tl-title" id="titleB">Timeline B</div>
+      <div class="tl-nav">
+        <span class="tl-badge" id="badgeB" style="opacity:.4">● B</span>
+        <button class="btn sq" id="tabB" onclick="setActive('B')">B</button>
+      </div>
+    </div>
+    <div class="tl-track" id="trackB"><div class="tl-inner" id="innerB"></div></div>
+  </div>
+  <div class="tl-block hidden" id="wrapC">
+    <div class="tl-header">
+      <div class="tl-title" id="titleC">Timeline C</div>
+      <div class="tl-nav">
+        <span class="tl-badge" id="badgeC" style="opacity:.4">● C</span>
+        <button class="btn sq" id="tabC" onclick="setActive('C')">C</button>
+      </div>
+    </div>
+    <div class="tl-track" id="trackC"><div class="tl-inner" id="innerC"></div></div>
+  </div>
+</div>
+
+<!-- ===== CONTROLS ===== -->
+<div class="controls">
+  <button class="btn" id="snapBtn">⏮ Snap</button>
+  <div class="ctrl-grp">
+    <button class="btn sq" id="llBtn">⏪</button>
+    <button class="btn sq" id="lBtn">◀</button>
+  </div>
+  <button class="play-btn" id="playBtn">▶️</button>
+  <div class="ctrl-grp">
+    <button class="btn sq" id="rBtn">▶</button>
+    <button class="btn sq" id="rrBtn">⏩</button>
+  </div>
+</div>
+
+<!-- ===== MAIN AREA ===== -->
+<div class="main-area">
+
+  <!-- PANNEAU BLOC -->
+  <div class="panel" id="blockPanel">
+    <h3>Bloc sélectionné <span class="panel-sub" id="tlLabel"></span></h3>
+    <div class="no-block" id="noBlock">← Clique sur un bloc</div>
+    <div id="blockEditor" style="display:none">
+      <input class="field" id="blockName" placeholder="Titre du bloc">
+      <textarea class="field" id="blockDesc" placeholder="Description courte…" rows="2"></textarea>
+      <div class="panel-actions">
+        <button class="btn sq" id="splitBtn" title="Couper ici">🔪</button>
+        <button class="btn sq" id="blackBtn" title="Passer noir">🖤</button>
+        <button class="btn sq" id="delBtn" title="Supprimer">✕</button>
+        <button class="btn sq" id="undoBtn" title="Annuler">↩</button>
+      </div>
+      <div class="todo-header">
+        <span class="todo-title">To-do du bloc</span>
+        <span id="todoCount" style="font-size:11px;color:#888"></span>
+      </div>
+      <div style="font-size:11px;color:#888;margin-bottom:5px;">Catégorie :</div>
+      <div class="palette-row" id="paletteRow"></div>
+      <div class="todo-list" id="todoList"></div>
+      <div class="add-row">
+        <input class="add-input" id="addInput" placeholder="+ Nouvelle tâche…">
+        <button class="btn sq" id="addBtn">＋</button>
+      </div>
+    </div>
+    <div class="status-line" id="statusLine"></div>
+  </div>
+
+  <!-- MASTER TODO -->
+  <div class="panel">
+    <h3>
+      Master To-Do
+      <button class="toggle-btn" id="masterToggle">▲ Réduire</button>
+    </h3>
+    <div id="masterBody">
+      <div class="filter-row">
+        <span class="filter-lbl">Filtrer :</span>
+        <button class="filter-all on" id="filterAll">Tout</button>
+        <div id="filterBtns"></div>
+      </div>
+      <div class="master-list" id="masterList"></div>
+    </div>
+  </div>
+</div>
+
+<div id="zoomBadge">100%</div>
+
+<audio id="audio"></audio>
+
+<script>
+/* =====================================================
+   CONSTANTES & STATE
+   ===================================================== */
+const TIDS = ['A','B','C'];
+const PX_MIN = 2, PX_MAX = 600;
+const COLORS = [
+  { id:'red',    hex:'#e74c3c', label:'Figurants' },
+  { id:'orange', hex:'#e67e22', label:'Solo' },
+  { id:'yellow', hex:'#f1c40f', label:'Musical' },
+  { id:'green',  hex:'#2ecc71', label:'Technique' },
+  { id:'blue',   hex:'#3498db', label:'Régie' },
+  { id:'purple', hex:'#9b59b6', label:'Divers' },
+];
+const BLOCK_COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#e91e63'];
+
+const audio = document.getElementById('audio');
+let pxMin = PX_MIN;
+
+const state = {
+  pxPerSec: 100,
+  activeTimeline: 'A',
+  displayMode: 1,
+  audioLocked: false,
+  lightMode: false,
+  isPlaying: false,
+  selCat: 'red',
+  activeFilter: null,
+  masterOpen: true,
+  timelines: {
+    A: { name:'Timeline A', blocks:[], sel:null, hist:[], colorIdx:0 },
+    B: { name:'Timeline B', blocks:[], sel:null, hist:[], colorIdx:2 },
+    C: { name:'Timeline C', blocks:[], sel:null, hist:[], colorIdx:4 },
+  }
+};
+
+function getTL(id){ return state.timelines[id || state.activeTimeline]; }
+function fmt(s){
+  if(!isFinite(s)) return '00:00';
+  const m = Math.floor(s/60), sec = Math.floor(s%60);
+  return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+}
+function setStatus(msg){ document.getElementById('statusLine').textContent = msg; }
+function showZoom(){
+  const b = document.getElementById('zoomBadge');
+  b.textContent = Math.round(state.pxPerSec)+'px/s';
+  b.style.opacity='1';
+  clearTimeout(b._t);
+  b._t = setTimeout(()=>b.style.opacity='0', 1200);
+}
+
+/* =====================================================
+   COULEURS BLOC (round-robin)
+   ===================================================== */
+function nextColor(tid){
+  const tl = getTL(tid);
+  const c = BLOCK_COLORS[tl.colorIdx % BLOCK_COLORS.length];
+  tl.colorIdx++;
+  return c;
+}
+
+/* =====================================================
+   SAUVEGARDE / CHARGEMENT
+   ===================================================== */
+function saveToStorage(){
+  const data = {
+    projectName: document.getElementById('projectName').value,
+    pxPerSec: state.pxPerSec,
+    activeTimeline: state.activeTimeline,
+    displayMode: state.displayMode,
+    lightMode: state.lightMode,
+    timelines: {}
+  };
+  TIDS.forEach(id => {
+    const tl = getTL(id);
+    data.timelines[id] = { name: tl.name, blocks: tl.blocks, colorIdx: tl.colorIdx };
+  });
+  localStorage.setItem('tlv9', JSON.stringify(data));
+}
+
+function loadFromStorage(){
+  try {
+    const raw = localStorage.getItem('tlv9');
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    document.getElementById('projectName').value = data.projectName || 'Mon Projet';
+    state.pxPerSec = data.pxPerSec || 100;
+    state.activeTimeline = data.activeTimeline || 'A';
+    state.displayMode = data.displayMode || 1;
+    state.lightMode = data.lightMode || false;
+    if(state.lightMode){ document.body.classList.add('light-mode'); document.getElementById('themeBtn').textContent='☀️'; }
+    TIDS.forEach(id => {
+      if(data.timelines && data.timelines[id]){
+        const src = data.timelines[id];
+        getTL(id).name = src.name;
+        getTL(id).blocks = src.blocks || [];
+        getTL(id).colorIdx = src.colorIdx || 0;
+        document.getElementById('title'+id).textContent = src.name;
+      }
+    });
+    applyDisplay(state.displayMode);
+    setActive(state.activeTimeline);
+  } catch(e){ console.warn('Load error',e); }
+}
+
+/* Export / Import JSON */
+document.getElementById('exportBtn').onclick = () => {
+  saveToStorage();
+  const data = localStorage.getItem('tlv9');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([data],{type:'application/json'}));
+  a.download = (document.getElementById('projectName').value||'projet')+'.json';
+  a.click();
+};
+document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
+document.getElementById('importFile').onchange = (e) => {
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    localStorage.setItem('tlv9', ev.target.result);
+    loadFromStorage();
+    renderAll(); updatePanel(); updateMasterProgress(); updateMasterList();
+    setStatus('Projet importé ✅');
+  };
+  r.readAsText(f);
+};
+
+/* =====================================================
+   RENDER TIMELINES
+   ===================================================== */
+function renderAll(){
+  TIDS.forEach(id => renderTL(id));
+}
+
+function renderTL(id){
+  const tl = getTL(id);
+  const inner = document.getElementById('inner'+id);
+  const track = document.getElementById('track'+id);
+  const dur = isFinite(audio.duration) ? audio.duration : 0;
+  // largeur minimum à partir du contenu réel (blocs + curseur), pas uniquement audio.duration
+let contentEnd = 0;
+for (const b of tl.blocks) {
+  contentEnd = Math.max(contentEnd, b.start + b.duration);
+}
+if (isFinite(audio.currentTime)) contentEnd = Math.max(contentEnd, audio.currentTime);
+
+// Convertit en pixels
+const totalW = Math.max(contentEnd * state.pxPerSec, track.clientWidth || 800);
+
+  inner.style.width = totalW + 'px';
+
+  // Supprimer anciens blocs (garder curseur)
+  Array.from(inner.children).forEach(c => { if(!c.classList.contains('cursor')) inner.removeChild(c); });
+
+  const isActive = (id === state.activeTimeline);
+
+  tl.blocks.forEach((b, bi) => {
+    const div = document.createElement('div');
+    div.className = 'block' + (b === tl.sel ? ' selected' : '');
+    div.style.left = (b.start * state.pxPerSec) + 'px';
+    div.style.width = Math.max(4, b.duration * state.pxPerSec) + 'px';
+    div.style.background = b.black ? '#222' : (b.color || nextColorStatic(id, bi));
+    if(b.black) div.style.border = '2px solid #555';
+
+    // Label + barre de progression mini
+    const done = (b.todos||[]).filter(t=>t.done).length;
+    const total = (b.todos||[]).length;
+    const pct = total > 0 ? done/total : 0;
+    div.innerHTML = `<span style="pointer-events:none">${b.label||'•'}</span>`;
+    if(total > 0){
+      const bar = document.createElement('div');
+      bar.style.cssText = `position:absolute;bottom:3px;left:4px;right:4px;height:3px;background:rgba(255,255,255,0.2);border-radius:2px;pointer-events:none`;
+      const fill = document.createElement('div');
+      fill.style.cssText = `height:100%;width:${pct*100}%;background:${pct===1?'white':'rgba(255,255,255,0.7)'};border-radius:2px;transition:width 0.3s`;
+      bar.appendChild(fill);
+      div.appendChild(bar);
+    }
+
+    // Clic → sélection
+    div.onclick = (e) => {
+      if(e.target.classList.contains('resize-handle')) return;
+      setActive(id);
+      tl.sel = b;
+      updatePanel();
+      renderAll();
+    };
+
+    // Resize handle
+    if(isActive && !state.audioLocked){
+      const handle = document.createElement('div');
+      handle.className = 'resize-handle';
+      handle.onmousedown = (e) => {
+        e.stopPropagation(); e.preventDefault();
+        saveHistory(id);
+        const startX = e.clientX;
+        const startDur = b.duration;
+        const next = tl.blocks[bi+1];
+        const startNextDur = next ? next.duration : null;
+        const startNextStart = next ? next.start : null;
+        const onMove = (ev) => {
+          const dx = ev.clientX - startX;
+          const dt = dx / state.pxPerSec;
+          const minDur = 4 / state.pxPerSec;
+          const maxDt = next ? (startDur + startNextDur - minDur) - startDur + dt : dt;
+          const clampedDt = next ? Math.min(dt, startNextDur - minDur) : dt;
+          const newDur = Math.max(minDur, startDur + clampedDt);
+          b.duration = newDur;
+          if(next){
+            next.start = b.start + newDur;
+            next.duration = Math.max(minDur, startNextStart + startNextDur - next.start);
+          }
+          renderTL(id);
+        };
+        const onUp = () => {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          saveToStorage();
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      };
+      div.appendChild(handle);
+    }
+
+    inner.appendChild(div);
+  });
+
+  // Curseur
+  let cursor = inner.querySelector('.cursor');
+  if(!cursor){
+    cursor = document.createElement('div');
+    cursor.className = 'cursor';
+    const ch = document.createElement('div');
+    ch.className = 'cursor-handle';
+    cursor.appendChild(ch);
+    ch.onmousedown = (e) => {
+      e.stopPropagation();
+      const startX = e.clientX, startT = audio.currentTime;
+      const onMove = (ev) => {
+        const dt = (ev.clientX - startX) / state.pxPerSec;
+        audio.currentTime = Math.max(0, Math.min(audio.duration||0, startT + dt));
+        updateCursors(); updateTimeBadge(); autoSelect();
+      };
+      const onUp = () => { document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp); };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    };
+    inner.appendChild(cursor);
+  }
+
+  // Clic track → déplace curseur
+ track.onclick = (e) => {
+  if(!isActive) return;
+
+  const rect = track.getBoundingClientRect();
+  const x = e.clientX - rect.left + track.scrollLeft; // px depuis le début de la track (scroll compris)
+  const maxDur = audio.duration || 0;
+
+  const t = Math.max(0, Math.min(maxDur, x / state.pxPerSec));
+
+  audio.currentTime = t;
+
+  // Met à jour les curseurs UI
+  updateCursors();
+  updateTimeBadge();
+
+  // ✅ Sélection du bloc correspondant au temps t
+  // autoSelect() est censé utiliser audio.currentTime pour faire state.sel = bloc contenant t
+  autoSelect();
+};
+
+
+  updateCursorEl(id);
+}
+
+/* Couleur statique par index (pour rendu sans mutation) */
+function nextColorStatic(tid, bi){
+  return BLOCK_COLORS[(getTL(tid).colorIdx - getTL(tid).blocks.length + bi + 100*BLOCK_COLORS.length) % BLOCK_COLORS.length] || BLOCK_COLORS[bi % BLOCK_COLORS.length];
+}
+
+function updateCursors(){ TIDS.forEach(id => updateCursorEl(id)); }
+function updateCursorEl(id){
+  const inner = document.getElementById('inner'+id);
+  if(!inner) return;
+  const cur = inner.querySelector('.cursor');
+  if(!cur || !isFinite(audio.duration)) return;
+  cur.style.left = (audio.currentTime * state.pxPerSec) + 'px';
+}
+
+function autoScroll(t){
+  TIDS.forEach(id => {
+    const track = document.getElementById('track'+id);
+    if(!track) return;
+    const x = t * state.pxPerSec, w = track.clientWidth;
+    if(x < track.scrollLeft || x > track.scrollLeft + w - 20)
+      track.scrollLeft = Math.max(0, x - w/2);
+  });
+}
+
+function autoSelect(){
+  const tl = getTL();
+  const t = audio.currentTime;
+  const found = tl.blocks.find(b => t >= b.start && t < b.start + b.duration);
+  if(found && found !== tl.sel){ tl.sel = found; updatePanel(); renderAll(); }
+}
+
+/* =====================================================
+   TIME BADGE
+   ===================================================== */
+function updateTimeBadge(){
+  const cur = isFinite(audio.currentTime) ? audio.currentTime : 0;
+  const dur = isFinite(audio.duration) ? audio.duration : 0;
+  document.getElementById('timeBadge').textContent = fmt(cur)+' / '+fmt(dur);
+}
+
+/* =====================================================
+   AUDIO
+   ===================================================== */
+document.getElementById('audioBtn').onclick = () => document.getElementById('audioFile').click();
+document.getElementById('audioFile').onchange = (e) => {
+  const file = e.target.files[0]; if(!file) return;
+  audio.src = URL.createObjectURL(file);
+  audio.load();
+  audio.addEventListener('loadedmetadata', () => {
+    const dur = audio.duration;
+    const visW = document.getElementById('trackA').clientWidth || 800;
+    pxMin = Math.max(PX_MIN, visW / dur);
+    state.pxPerSec = pxMin * 1.5;
+    TIDS.forEach(id => {
+      const tl = getTL(id);
+      if(tl.blocks.length === 0){
+        const c = BLOCK_COLORS[tl.colorIdx % BLOCK_COLORS.length]; tl.colorIdx++;
+        tl.blocks = [{ start:0, duration:dur, label:'🎵', desc:'', todos:[], color:c, black:false }];
+        tl.sel = tl.blocks[0];
+      }
+    });
+    setStatus('✅ '+file.name);
+    updateTimeBadge(); updatePanel(); renderAll(); showZoom(); saveToStorage();
+  }, { once:true });
+};
+
+audio.addEventListener('timeupdate', () => {
+  updateCursors(); updateTimeBadge(); autoSelect(); autoScroll(audio.currentTime);
+});
+audio.addEventListener('ended', () => {
+  state.isPlaying = false; document.getElementById('playBtn').textContent = '▶️';
+});
+
+/* =====================================================
+   LECTURE
+   ===================================================== */
+let moveInterval = null;
+document.getElementById('playBtn').onclick = () => {
+  if(!isFinite(audio.duration)){ setStatus('Importe un audio !'); return; }
+  if(state.isPlaying){ audio.pause(); state.isPlaying=false; document.getElementById('playBtn').textContent='▶️'; }
+  else { audio.play(); state.isPlaying=true; document.getElementById('playBtn').textContent='⏸️'; }
+};
+function startMove(dir, fast){
+  stopMove();
+  moveInterval = setInterval(()=>{
+    if(!isFinite(audio.duration)) return;
+    audio.currentTime = Math.max(0, Math.min(audio.duration, audio.currentTime + dir*(fast?0.5:0.08)));
+    updateCursors(); updateTimeBadge(); autoSelect();
+  }, 16);
+}
+function stopMove(){ clearInterval(moveInterval); }
+document.getElementById('lBtn').onmousedown  = ()=>startMove(-1,false);
+document.getElementById('rBtn').onmousedown  = ()=>startMove(1,false);
+document.getElementById('llBtn').onmousedown = ()=>startMove(-1,true);
+document.getElementById('rrBtn').onmousedown = ()=>startMove(1,true);
+window.addEventListener('mouseup', stopMove);
+
+document.getElementById('snapBtn').onclick = () => {
+  const b = getTL().sel; if(!b) return;
+  audio.currentTime = b.start; updateCursors(); updateTimeBadge(); setStatus('Snap ⏮');
+};
+
+/* =====================================================
+   SPLIT / BLACK / DELETE / UNDO
+   ===================================================== */
+function saveHistory(id){
+  const tl = getTL(id);
+  tl.hist.push(JSON.stringify(tl.blocks));
+  if(tl.hist.length > 20) tl.hist.shift();
+}
+
+document.getElementById('splitBtn').onclick = () => {
+  console.log('[split] click');
+  if(state.audioLocked){ setStatus('Verrouillé 🔒'); return; }
+
+  const tl = getTL();
+  const b = tl.sel;
+
+  if(!b){ setStatus('Sélectionne un bloc'); return; }
+
+  const t = audio.currentTime;
+
+  if(t <= b.start || t >= b.start + b.duration){
+    setStatus('Place le curseur dans le bloc');
+    return;
+  }
+
+  saveHistory(state.activeTimeline);
+
+  const nb = {
+    start: t,
+    duration: (b.start + b.duration) - t,
+    label: '',
+    desc: '',
+    todos: [],
+    color: b.color,   // ✅ garde EXACTEMENT la couleur du bloc coupé
+    black: false
+  };
+
+  b.duration = t - b.start;
+
+  const idx = tl.blocks.indexOf(b);
+  if(idx === -1){
+    setStatus('Erreur: bloc introuvable');
+    return;
+  }
+
+  tl.blocks.splice(idx + 1, 0, nb);
+  tl.sel = nb;
+
+  updatePanel();
+  renderAll();
+  saveToStorage();
+  setStatus('Coupé ✂️');
+};
+
+document.getElementById('blackBtn').onclick = () => {
+  const b = getTL().sel; if(!b) return;
+  b.black = !b.black; renderAll(); saveToStorage();
+  setStatus(b.black ? '🖤 Noir' : '🎨 Coloré');
+};
+
+document.getElementById('delBtn').onclick = () => {
+  if(state.audioLocked){ setStatus('Verrouillé 🔒'); return; }
+  const tl = getTL(); const b = tl.sel;
+  if(!b) return;
+  if(tl.blocks.length <= 1){ setStatus('Impossible'); return; }
+  saveHistory(state.activeTimeline);
+  const idx = tl.blocks.indexOf(b);
+  if(idx > 0){ tl.blocks[idx-1].duration += b.duration; tl.sel = tl.blocks[idx-1]; }
+  else { tl.blocks[1].start = b.start; tl.blocks[1].duration += b.duration; tl.sel = tl.blocks[1]; }
+  tl.blocks.splice(idx,1);
+  updatePanel(); renderAll(); saveToStorage(); setStatus('Supprimé ✅');
+};
+
+document.getElementById('undoBtn').onclick = () => {
+  const tl = getTL();
+  if(!tl.hist.length){ setStatus('Rien à annuler'); return; }
+  tl.blocks = JSON.parse(tl.hist.pop());
+  tl.sel = tl.blocks[0];
+  updatePanel(); renderAll(); saveToStorage(); setStatus('Annulé ↩️');
+};
+
+/* =====================================================
+   PANEL BLOC
+   ===================================================== */
+function updatePanel(){
+  const tl = getTL(); const b = tl.sel;
+  document.getElementById('tlLabel').textContent = tl.name;
+  document.getElementById('noBlock').style.display = b ? 'none' : 'block';
+  document.getElementById('blockEditor').style.display = b ? 'block' : 'none';
+  if(!b) return;
+  document.getElementById('blockName').value = b.label || '';
+  document.getElementById('blockDesc').value = b.desc || '';
+  renderTodoList(b);
+  renderPalette();
+}
+
+document.getElementById('blockName').oninput = () => {
+  const b = getTL().sel; if(b){ b.label = document.getElementById('blockName').value; renderAll(); saveToStorage(); }
+};
+document.getElementById('blockDesc').oninput = () => {
+  const b = getTL().sel; if(b){ b.desc = document.getElementById('blockDesc').value; saveToStorage(); }
+};
+
+/* =====================================================
+   TODO LIST
+   ===================================================== */
+function renderTodoList(block){
+  const list = document.getElementById('todoList');
+  list.innerHTML = '';
+  const todos = block.todos || [];
+  todos.forEach((task, i) => {
+    const cat = COLORS.find(c=>c.id===task.cat) || COLORS[5];
+    const item = document.createElement('div');
+    item.className = 'todo-item';
+
+    // Checkbox
+    const ck = document.createElement('div');
+    ck.className = 'todo-check' + (task.done?' done-check':'');
+    ck.style.borderColor = cat.hex;
+    ck.style.background = task.done ? cat.hex : 'transparent';
+    ck.onclick = () => { task.done=!task.done; renderTodoList(block); updateMasterProgress(); updateMasterList(); renderAll(); saveToStorage(); };
+
+    // Dot couleur (clic = changer catégorie)
+    const dot = document.createElement('div');
+    dot.className = 'color-dot';
+    dot.style.background = cat.hex;
+    dot.title = cat.label+' — clic pour changer';
+    dot.onclick = () => {
+      const idx = COLORS.findIndex(c=>c.id===task.cat);
+      task.cat = COLORS[(idx+1)%COLORS.length].id;
+      renderTodoList(block); updateMasterList(); saveToStorage();
+    };
+
+    // Texte
+    const txt = document.createElement('span');
+    txt.className = 'todo-text' + (task.done?' done-text':'');
+    txt.contentEditable = true;
+    txt.textContent = task.text;
+    txt.oninput = () => { task.text = txt.textContent; saveToStorage(); };
+    txt.onkeydown = (e) => { if(e.key==='Enter'){ e.preventDefault(); document.getElementById('addInput').focus(); } };
+
+    // Supprimer
+    const rm = document.createElement('button');
+    rm.className = 'todo-rm'; rm.textContent = '×';
+    rm.onclick = () => { block.todos.splice(i,1); renderTodoList(block); updateMasterProgress(); updateMasterList(); renderAll(); saveToStorage(); };
+
+    item.appendChild(ck); item.appendChild(dot); item.appendChild(txt); item.appendChild(rm);
+    list.appendChild(item);
+  });
+
+  const done = todos.filter(t=>t.done).length;
+  document.getElementById('todoCount').textContent = todos.length > 0 ? done+'/'+todos.length : '';
+}
+
+function addTask(){
+  const tl = getTL(); const b = tl.sel; if(!b) return;
+  const inp = document.getElementById('addInput');
+  const text = inp.value.trim(); if(!text) return;
+  if(!b.todos) b.todos = [];
+  b.todos.push({ text, done:false, cat:state.selCat });
+  inp.value = '';
+  renderTodoList(b); updateMasterProgress(); updateMasterList(); renderAll(); saveToStorage();
+}
+document.getElementById('addBtn').onclick = addTask;
+document.getElementById('addInput').onkeydown = (e) => { if(e.key==='Enter') addTask(); };
+
+/* =====================================================
+   PALETTE (sélection catégorie)
+   ===================================================== */
+function renderPalette(){
+  const row = document.getElementById('paletteRow');
+  row.innerHTML = '';
+  COLORS.forEach(cat => {
+    const sw = document.createElement('div');
+    sw.className = 'swatch' + (cat.id===state.selCat?' sel':'');
+    sw.style.background = cat.hex;
+    sw.title = cat.label;
+    sw.onclick = () => { state.selCat=cat.id; renderPalette(); };
+    row.appendChild(sw);
+  });
+}
+
+/* =====================================================
+   MASTER PROGRESS
+   ===================================================== */
+function updateMasterProgress(){
+  let total=0, done=0;
+  TIDS.forEach(id => getTL(id).blocks.forEach(b => {
+    (b.todos||[]).forEach(t => { total++; if(t.done) done++; });
+  }));
+  const pct = total===0 ? 0 : done/total;
+  const pctRound = Math.round(pct*100);
+  document.getElementById('masterFill').style.width = pct*100+'%';
+  document.getElementById('masterFill').style.background = pct>=1 ? 'white' : `hsl(${pct*120},70%,50%)`;
+  document.getElementById('masterPct').textContent = pctRound+'%';
+}
+
+/* =====================================================
+   MASTER LIST
+   ===================================================== */
+function updateMasterList(){
+  const list = document.getElementById('masterList');
+  list.innerHTML = '';
+  let empty = true;
+  TIDS.forEach(id => {
+    const tl = getTL(id);
+    tl.blocks.forEach((block, bi) => {
+      const todos = (block.todos||[]).filter(t => !state.activeFilter || t.cat===state.activeFilter);
+      if(!todos.length) return;
+      empty = false;
+      const group = document.createElement('div');
+      group.className = 'm-group';
+      const lbl = document.createElement('div');
+      lbl.className = 'm-group-lbl';
+      lbl.textContent = tl.name+' — '+(block.label||'Bloc '+(bi+1))+' ['+fmt(block.start)+']';
+      group.appendChild(lbl);
+      todos.forEach(task => {
+        const cat = COLORS.find(c=>c.id===task.cat)||COLORS[5];
+        const item = document.createElement('div'); item.className = 'm-item';
+        const dot = document.createElement('div'); dot.className='m-dot'; dot.style.background=cat.hex;
+        const txt = document.createElement('span'); txt.className='m-text'+(task.done?' done-text':''); txt.textContent=task.text;
+        const ck = document.createElement('div');
+        ck.className = 'm-check'+(task.done?' done-check':'');
+        ck.style.borderColor = cat.hex;
+        ck.style.background = task.done ? cat.hex : 'transparent';
+        ck.onclick = () => { task.done=!task.done; updateMasterList(); updateMasterProgress(); updatePanel(); renderAll(); saveToStorage(); };
+        item.appendChild(dot); item.appendChild(txt); item.appendChild(ck);
+        group.appendChild(item);
+      });
+      list.appendChild(group);
+    });
+  });
+  if(empty) list.innerHTML = '<div class="no-block">Aucune tâche.</div>';
+}
+
+/* =====================================================
+   FILTRES
+   ===================================================== */
+function renderFilters(){
+  const row = document.getElementById('filterBtns');
+  row.innerHTML = '';
+  COLORS.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (state.activeFilter===cat.id?' on':'');
+    btn.style.background = cat.hex;
+    btn.title = cat.label;
+    btn.onclick = () => {
+      state.activeFilter = cat.id;
+      document.getElementById('filterAll').classList.remove('on');
+      row.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+      updateMasterList();
+    };
+    row.appendChild(btn);
+  });
+  document.getElementById('filterAll').onclick = () => {
+    state.activeFilter = null;
+    document.getElementById('filterAll').classList.add('on');
+    row.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('on'));
+    updateMasterList();
+  };
+}
+
+/* =====================================================
+   MASTER TOGGLE
+   ===================================================== */
+document.getElementById('masterToggle').onclick = () => {
+  state.masterOpen = !state.masterOpen;
+  document.getElementById('masterBody').style.display = state.masterOpen ? 'block' : 'none';
+  document.getElementById('masterToggle').textContent = state.masterOpen ? '▲ Réduire' : '▼ Ouvrir';
+};
+document.getElementById('masterWrap').onclick = () => {
+  document.getElementById('masterToggle').click();
+};
+
+/* =====================================================
+   DISPLAY MODE
+   ===================================================== */
+function applyDisplay(mode){
+  state.displayMode = mode;
+  document.getElementById('wrapB').classList.toggle('hidden', mode<2);
+  document.getElementById('wrapC').classList.toggle('hidden', mode<3);
+  ['1','2','3'].forEach(n => document.getElementById('disp'+n).classList.toggle('active', String(mode)===n));
+}
+document.getElementById('disp1').onclick = ()=>{ applyDisplay(1); saveToStorage(); };
+document.getElementById('disp2').onclick = ()=>{ applyDisplay(2); saveToStorage(); };
+document.getElementById('disp3').onclick = ()=>{ applyDisplay(3); saveToStorage(); };
+
+/* =====================================================
+   TIMELINE ACTIVE
+   ===================================================== */
+function setActive(id){
+  state.activeTimeline = id;
+  TIDS.forEach(tid => {
+    document.getElementById('badge'+tid).style.opacity = tid===id?'1':'0.4';
+    document.getElementById('tab'+tid).classList.toggle('active-tab', tid===id);
+  });
+  updatePanel(); renderAll();
+}
+
+/* =====================================================
+   RENOMMAGE TIMELINE (double-clic)
+   ===================================================== */
+TIDS.forEach(id => {
+  const el = document.getElementById('title'+id);
+  el.ondblclick = () => {
+    const cur = getTL(id).name;
+    el.innerHTML = `<input style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:inherit;padding:2px 6px;border-radius:4px;font-size:13px;font-weight:bold;width:130px" value="${cur}">`;
+    const inp = el.querySelector('input'); inp.focus(); inp.select();
+    const finish = () => {
+      const v = inp.value.trim() || ('Timeline '+id);
+      getTL(id).name = v; el.textContent = v;
+      updatePanel(); saveToStorage();
+    };
+    inp.onblur = finish;
+    inp.onkeydown = (e) => { if(e.key==='Enter') finish(); if(e.key==='Escape'){ el.textContent=cur; } };
+  };
+});
+
+/* =====================================================
+   ZOOM MOLETTE
+   ===================================================== */
+TIDS.forEach(id => {
+  const track = document.getElementById('track'+id);
+  track.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    if(e.shiftKey){ track.scrollLeft += e.deltaY; return; }
+
+    const factor = e.deltaY < 0 ? 1.12 : 0.89;
+    const old = state.pxPerSec;
+
+    const newPx = Math.max(pxMin, Math.min(PX_MAX, state.pxPerSec * factor));
+    if(newPx === state.pxPerSec) return;
+
+    // temps à centrer = curseur audio
+    const centerTime = isFinite(audio.currentTime) ? audio.currentTime : 0;
+
+    state.pxPerSec = newPx;
+
+    // centre actuel avant render
+    const centerX = track.clientWidth / 2;
+    const centerScrollLeftOld = track.scrollLeft;
+
+    renderAll();
+
+    // après render, on veut que centerTime soit au centre du track
+    const targetScrollLeft = (centerTime * state.pxPerSec) - centerX;
+
+    // clamp entre 0 et (scrollWidth - clientWidth)
+    const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+    track.scrollLeft = Math.max(0, Math.min(maxScroll, targetScrollLeft));
+
+    showZoom();
+  }, { passive:false });
+});
+
+/* =====================================================
+   LOCK / THEME
+   ===================================================== */
+document.getElementById('lockBtn').onclick = () => {
+  state.audioLocked = !state.audioLocked;
+  document.getElementById('lockBtn').textContent = state.audioLocked ? '🔒' : '🔓';
+  setStatus(state.audioLocked ? 'Verrouillé 🔒' : 'Déverrouillé');
+};
+document.getElementById('themeBtn').onclick = () => {
+  state.lightMode = !state.lightMode;
+  document.body.classList.toggle('light-mode', state.lightMode);
+  document.getElementById('themeBtn').textContent = state.lightMode ? '☀️' : '🌙';
+  saveToStorage();
+};
+
+/* =====================================================
+   CLAVIER
+   ===================================================== */
+window.addEventListener('keydown', (e) => {
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.isContentEditable) return;
+  if(e.key===' '){ e.preventDefault(); document.getElementById('playBtn').click(); }
+  if(e.key==='c'||e.key==='C') document.getElementById('splitBtn').click();
+  if(e.ctrlKey && (e.key==='z'||e.key==='Z')) document.getElementById('undoBtn').click();
+});
+
+/* =====================================================
+   INIT
+   ===================================================== */
+loadFromStorage();
+renderAll();
+updatePanel();
+updateMasterProgress();
+updateMasterList();
+renderFilters();
+renderPalette();
+</script>
+</body>
+</html>
