@@ -14,7 +14,7 @@ body.light-mode { background: #e8e8e8; color: #1a1a1a; }
 
 /* BOUTONS */
 .btn {
-  border: 2px solid rgba(255,255,255,0.12); cursor: pointer; font-size: 14px;
+  border: 2px solid rgba(255,255,255,0.12); cursor: pointer; font-size: 18px;
   transition: all 0.15s; background: linear-gradient(180deg,#2a2a2a,#151515);
   color: white; border-radius: 8px; padding: 8px 12px; font-family: inherit;
   display: inline-flex; align-items: center; justify-content: center;
@@ -22,7 +22,7 @@ body.light-mode { background: #e8e8e8; color: #1a1a1a; }
 body.light-mode .btn { background: linear-gradient(180deg,#f0f0f0,#ddd); color: #1a1a1a; border-color: rgba(0,0,0,0.12); }
 .btn:hover { filter: brightness(1.2); transform: scale(1.04); }
 .btn:active { transform: scale(0.95); }
-.btn.sq { width: 44px; height: 44px; padding: 0; font-size: 18px; }
+.btn.sq { width: 44px; height: 44px; padding: 0; font-size: 14px; }
 .btn.active-tab { background: linear-gradient(180deg,#4a90e2,#2c6fb8); border-color: #4a90e2; color: white; }
 .btn.active { background: linear-gradient(180deg,#4a90e2,#2c6fb8); border-color: #4a90e2; color: white; }
 
@@ -89,7 +89,7 @@ body.light-mode .tl-track::-webkit-scrollbar-thumb { background: #bbb; }
 .block {
   position: absolute; top: 5px; height: 52px; border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: bold; color: white; cursor: pointer;
+  font-size: 18px; font-weight: bold; color: white; cursor: pointer;
   overflow: hidden; user-select: none; border: 2px solid transparent;
   transition: border-color 0.15s, filter 0.15s;
   text-shadow: 0 1px 3px rgba(0,0,0,0.6); padding: 0 4px; text-align: center;
@@ -115,8 +115,20 @@ body.light-mode .tl-track::-webkit-scrollbar-thumb { background: #bbb; }
 .hidden { display: none !important; }
 
 /* CONTROLS */
-.controls { margin-top: 14px; display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; }
+.controls { 
+  margin-top: 14px; 
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center; 
+  gap: 14px; 
+}
+.controls > .ctrl-grp:first-child { justify-self: end; }
+.controls > .play-btn { justify-self: center; }
+.controls > .ctrl-grp:last-child { justify-self: start; }
 .ctrl-grp { display: flex; gap: 8px; align-items: center; }
+
+
+
 
 /* MAIN AREA */
 .main-area { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
@@ -254,11 +266,29 @@ body.light-mode .no-block { color: #aaa; }
 </head>
 <body>
 
+<!-- ===== MODALE DÉMARRAGE ===== -->
+<div id="startModal" style="display:flex; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#1a1a1a; border:1px solid #444; border-radius:12px; padding:30px; width:340px; text-align:center; box-shadow:0 8px 30px rgba(0,0,0,0.7);">
+    <h2 style="margin:0 0 20px 0; color:white;">🎬 Timeline Audio</h2>
+    <p style="color:#aaa; font-size:13px; margin-bottom:20px;">Que veux-tu faire ?</p>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <button class="btn" id="smContinue">▶️ Continuer le projet</button>
+      <button class="btn" id="smNew">🆕 Nouveau projet</button>
+      <button class="btn" id="smLoad">📂 Charger une sauvegarde</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- ===== HEADER ===== -->
 <div class="header">
   <input id="projectName" value="Mon Projet" title="Renommer">
+  <button class="btn" id="initBtn" title="Réinitialiser la timeline">🗑 Init</button>
+  <button class="btn sq" id="undoBtn" title="Annuler (Ctrl+Z)">↩</button>
   <button class="btn sq" id="audioBtn" title="Importer audio">🎵</button>
+
   <input type="file" id="audioFile" accept="audio/*" style="display:none">
+  <button class="btn sq" id="ltcBtn" title="LTC">🎛️</button>
   <button class="btn sq" id="lockBtn" title="Verrouiller">🔓</button>
   <button class="btn sq active" id="disp1">1</button>
   <button class="btn sq" id="disp2">2</button>
@@ -311,8 +341,8 @@ body.light-mode .no-block { color: #aaa; }
 
 <!-- ===== CONTROLS ===== -->
 <div class="controls">
-  <button class="btn" id="snapBtn">⏮ Snap</button>
   <div class="ctrl-grp">
+    <button class="btn" id="snapBtn" style="margin-right:8px;">⏮ Snap</button>
     <button class="btn sq" id="llBtn">⏪</button>
     <button class="btn sq" id="lBtn">◀</button>
   </div>
@@ -320,8 +350,12 @@ body.light-mode .no-block { color: #aaa; }
   <div class="ctrl-grp">
     <button class="btn sq" id="rBtn">▶</button>
     <button class="btn sq" id="rrBtn">⏩</button>
+    <button class="btn sq" id="ltcBtn">🎛️</button>
   </div>
 </div>
+
+
+
 
 <!-- ===== MAIN AREA ===== -->
 <div class="main-area">
@@ -331,13 +365,19 @@ body.light-mode .no-block { color: #aaa; }
     <h3>Bloc sélectionné <span class="panel-sub" id="tlLabel"></span></h3>
     <div class="no-block" id="noBlock">← Clique sur un bloc</div>
     <div id="blockEditor" style="display:none">
-      <input class="field" id="blockName" placeholder="Titre du bloc">
+      <div style="display:flex; gap:6px; align-items:center; margin-bottom:8px;">
+  <input class="field" id="blockName" placeholder="Titre du bloc" style="flex:1; margin-bottom:0;">
+  <button class="btn sq" id="prevBlockBtn" title="Bloc précédent">◀</button>
+  <button class="btn sq" id="nextBlockBtn" title="Bloc suivant">▶</button>
+</div>
+
+
       <textarea class="field" id="blockDesc" placeholder="Description courte…" rows="2"></textarea>
       <div class="panel-actions">
         <button class="btn sq" id="splitBtn" title="Couper ici">🔪</button>
         <button class="btn sq" id="blackBtn" title="Passer noir">🖤</button>
         <button class="btn sq" id="delBtn" title="Supprimer">✕</button>
-        <button class="btn sq" id="undoBtn" title="Annuler">↩</button>
+        
       </div>
       <div class="todo-header">
         <span class="todo-title">To-do du bloc</span>
@@ -372,6 +412,50 @@ body.light-mode .no-block { color: #aaa; }
 </div>
 
 <div id="zoomBadge">100%</div>
+
+<div id="ltcPanel" style="display:none; position:fixed; top:60px; right:16px; z-index:999;
+  background:#1a1a1a; border:1px solid #444; border-radius:10px; padding:16px; width:280px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.6);">
+  <h3 style="margin:0 0 12px 0; font-size:14px;">🎛️ LTC Generator</h3>
+  <div style="font-size:12px; color:#888; margin-bottom:8px;">10:00:00:00 · 25fps · 48kHz 16bit</div>
+  <div style="display:flex; flex-direction:column; gap:8px;">
+    <button class="btn" id="ltcGenBtn" style="font-size:13px;">⚡ Générer LTC</button>
+    <button class="btn" id="ltcLoadBtn" style="font-size:13px;">📂 Charger fichier LTC</button>
+    <input type="file" id="ltcFile" accept="audio/*,.wav" style="display:none">
+    <div style="border-top:1px solid #333; padding-top:8px; font-size:12px; color:#aaa;">
+      Routing audio :
+      <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
+        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+          <input type="radio" name="ltcRoute" value="stereo" checked> 🔊 Main stéréo (G+D)
+        </label>
+        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+          <input type="radio" name="ltcRoute" value="mainL_ltcR"> 🎵 Main G / LTC D
+        </label>
+        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+          <input type="radio" name="ltcRoute" value="ltcL_mainR"> 🎛️ LTC G / Main D
+        </label>
+      </div>
+    </div>
+    <div id="ltcStatus" style="font-size:11px; color:#888; min-height:16px;"></div>
+  </div>
+</div>
+
+<div id="ltcPanel" style="display:none; position:fixed; top:60px; left:420px; z-index:999;
+  background:#1a1a1a; border:1px solid #444; border-radius:10px; padding:16px; width:280px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.6);">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+    <h3 style="margin:0; font-size:14px;">🎛️ LTC Timecode</h3>
+    <button class="btn sq" onclick="document.getElementById('ltcPanel').style.display='none'">✕</button>
+  </div>
+  <div style="font-size:12px; color:#888; margin-bottom:10px;">10:00:00:00 · 25fps · 48kHz</div>
+  <div style="display:flex; flex-direction:column; gap:8px;">
+    <button class="btn" id="ltcGenBtn" style="font-size:13px;">⚡ Générer LTC</button>
+    <button class="btn" id="ltcLoadBtn" style="font-size:13px;">📂 Charger fichier LTC</button>
+    <input type="file" id="ltcFile" accept="audio/*,.wav" style="display:none">
+    <div id="ltcStatus" style="font-size:11px; color:#888; min-height:16px; margin-top:4px;"></div>
+  </div>
+</div>
+
 
 <audio id="audio"></audio>
 
@@ -455,6 +539,27 @@ function saveToStorage(){
   localStorage.setItem('tlv9', JSON.stringify(data));
 }
 
+/* =====================================================
+   INIT NEUTRE (état par défaut embarqué)
+   ===================================================== */
+const INIT_STATE = {
+  projectName: "Mon Projet",
+  pxPerSec: 100,
+  activeTimeline: "A",
+  displayMode: 1,
+  lightMode: false,
+  timelines: {
+    A: { name: "Timeline A", blocks: [], colorIdx: 0 },
+    B: { name: "Timeline B", blocks: [], colorIdx: 2 },
+    C: { name: "Timeline C", blocks: [], colorIdx: 4 }
+  }
+};
+
+// Au démarrage : si rien dans localStorage → charge l'Init neutre
+if(!localStorage.getItem('tlv9')){
+  localStorage.setItem('tlv9', JSON.stringify(INIT_STATE));
+}
+
 function loadFromStorage(){
   try {
     const raw = localStorage.getItem('tlv9');
@@ -500,6 +605,17 @@ document.getElementById('importFile').onchange = (e) => {
     setStatus('Projet importé ✅');
   };
   r.readAsText(f);
+};
+document.getElementById('initBtn').onclick = () => {
+  if(confirm('⚠️ Effacer toutes les timelines et repartir de zéro ?')){
+    localStorage.removeItem('tlv9');
+    TIDS.forEach(id => {
+      state.timelines[id] = { name:'Timeline '+id, blocks:[], sel:null, hist:[], colorIdx: id==='A'?0:id==='B'?2:4 };
+    });
+    document.getElementById('projectName').value = 'Mon Projet';
+    renderAll(); updatePanel(); updateMasterList();
+    setStatus('Projet réinitialisé ✅');
+  }
 };
 
 /* =====================================================
@@ -751,6 +867,33 @@ document.getElementById('snapBtn').onclick = () => {
   const b = getTL().sel; if(!b) return;
   audio.currentTime = b.start; updateCursors(); updateTimeBadge(); setStatus('Snap ⏮');
 };
+
+document.getElementById('prevBlockBtn').onclick = () => {
+  const tl = getTL();
+  if (!tl || !tl.blocks.length || !tl.sel) return;
+  const idx = tl.blocks.indexOf(tl.sel);
+  if (idx > 0) {
+    tl.sel = tl.blocks[idx - 1];
+    audio.currentTime = tl.sel.start;
+    updateCursors(); updateTimeBadge();
+    updatePanel(); renderAll(); saveToStorage();
+    setStatus('◀ Bloc précédent');
+  }
+};
+document.getElementById('nextBlockBtn').onclick = () => {
+  const tl = getTL();
+  if (!tl || !tl.blocks.length || !tl.sel) return;
+  const idx = tl.blocks.indexOf(tl.sel);
+  if (idx >= 0 && idx < tl.blocks.length - 1) {
+    tl.sel = tl.blocks[idx + 1];
+    audio.currentTime = tl.sel.start;
+    updateCursors(); updateTimeBadge();
+    updatePanel(); renderAll(); saveToStorage();
+    setStatus('▶ Bloc suivant');
+  }
+};
+
+
 
 /* =====================================================
    SPLIT / BLACK / DELETE / UNDO
@@ -1136,13 +1279,260 @@ window.addEventListener('keydown', (e) => {
 /* =====================================================
    INIT
    ===================================================== */
-loadFromStorage();
-renderAll();
-updatePanel();
-updateMasterProgress();
-updateMasterList();
-renderFilters();
-renderPalette();
+document.addEventListener('DOMContentLoaded', function(){
+  loadFromStorage();
+  renderAll();
+  updatePanel();
+  updateMasterProgress();
+  updateMasterList();
+  renderFilters();
+  renderPalette();
+  
+  /* =====================================================
+     MODALE DÉMARRAGE
+     ===================================================== */
+  (function(){
+    const modal = document.getElementById('startModal');
+
+    // Nouveau projet
+    document.getElementById('smNew').onclick = () => {
+      if(confirm('⚠️ Effacer le projet actuel et repartir de zéro ?')){
+        localStorage.removeItem('tlv9');
+        TIDS.forEach(id => {
+          state.timelines[id] = { name:'Timeline '+id, blocks:[], sel:null, hist:[], colorIdx: id==='A'?0:id==='B'?2:4 };
+        });
+        document.getElementById('projectName').value = 'Mon Projet';
+        modal.style.display = 'none';
+        // Propose d'importer un audio
+        setTimeout(() => document.getElementById('audioFile').click(), 200);
+      }
+    };
+
+    // Charger sauvegarde JSON
+    document.getElementById('smLoad').onclick = () => {
+      localStorage.removeItem('tlv9');
+      document.getElementById('importFile').click();
+      modal.style.display = 'none';
+    };
+
+    // Continuer
+    document.getElementById('smContinue').onclick = () => {
+      modal.style.display = 'none';
+    };
+  })();
+});
+
+
+
+/* =====================================================
+   LTC GENERATOR
+   ===================================================== */
+(function(){
+  const LTC_OFFSET   = 36000;
+  const LTC_FPS      = 25;
+  const LTC_SR       = 48000;
+  const LTC_BITS     = 16;
+  const LTC_DURATION = 7200;
+
+  let ltcActive = false;
+  let audioCtx = null;
+  let mainSourceNode = null, ltcSourceNode = null;
+  let mainSplitter = null, ltcSplitter = null, merger = null;
+  let mainGainL = null, mainGainR = null, ltcGainL = null, ltcGainR = null;
+  let ltcAudioEl = null;
+
+  // Toggle panneau
+  document.getElementById('ltcBtn').onclick = () => {
+    const p = document.getElementById('ltcPanel');
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  };
+
+  // Charger fichier LTC externe
+  document.getElementById('ltcLoadBtn').onclick = () => document.getElementById('ltcFile').click();
+  document.getElementById('ltcFile').onchange = (e) => {
+    const f = e.target.files[0]; if(!f) return;
+    const url = URL.createObjectURL(f);
+    setupLTCAudio(url);
+    document.getElementById('ltcStatus').textContent = '✅ Fichier LTC chargé : ' + f.name;
+  };
+
+  // Générer LTC WAV
+  document.getElementById('ltcGenBtn').onclick = () => {
+    document.getElementById('ltcStatus').textContent = '⏳ Génération...';
+    setTimeout(() => {
+      try {
+        const url = generateLTCWav(LTC_DURATION, LTC_FPS, LTC_SR, LTC_OFFSET * LTC_FPS);
+        setupLTCAudio(url);
+        document.getElementById('ltcStatus').textContent = '✅ LTC généré (10:00:00:00, 25fps)';
+      } catch(err) {
+        document.getElementById('ltcStatus').textContent = '❌ Erreur : ' + err.message;
+      }
+    }, 50);
+  };
+
+  // Listener radios routing
+  document.querySelectorAll('input[name="ltcRoute"]').forEach(r => {
+    r.addEventListener('change', applyRouting);
+  });
+
+  function generateLTCWav(durationSec, fps, sampleRate, startFrame){
+    const samplesPerFrame = sampleRate / fps;
+    const totalFrames = Math.ceil(durationSec * fps);
+    const totalSamples = Math.ceil(totalFrames * samplesPerFrame);
+    const buffer = new Int16Array(totalSamples);
+
+    let phase = 1;
+    let sampleIdx = 0;
+
+    for(let f = 0; f < totalFrames; f++){
+      const frame = startFrame + f;
+      const frameNum  = frame % fps;
+      const totalSec  = Math.floor(frame / fps);
+      const secs  = totalSec % 60;
+      const mins  = Math.floor(totalSec / 60) % 60;
+      const hours = Math.floor(totalSec / 3600) % 24;
+
+      const bits = buildLTCBits(frameNum, secs, mins, hours, fps);
+
+      const samplesThisFrame = Math.round((f+1)*samplesPerFrame) - Math.round(f*samplesPerFrame);
+      const samplesPerBit = samplesThisFrame / 80;
+
+      for(let b = 0; b < 80; b++){
+        const bit = bits[b];
+        const start = Math.round(b * samplesPerBit);
+        const end   = Math.round((b+1) * samplesPerBit);
+        phase = -phase;
+        const mid = Math.round((start+end)/2);
+        for(let s = start; s < end && sampleIdx+s < totalSamples; s++){
+          if(bit === 1 && s === mid) phase = -phase;
+          buffer[sampleIdx + s] = phase * 16000;
+        }
+      }
+      sampleIdx += samplesThisFrame;
+    }
+
+    return pcm16ToWavUrl(buffer, sampleRate, 1);
+  }
+
+  function buildLTCBits(frame, secs, mins, hours, fps){
+    const bits = new Array(80).fill(0);
+    function setBCD(val, positions){
+      const s = val.toString(10).padStart(2,'0');
+      const hi = parseInt(s[0]), lo = parseInt(s[1]);
+      [lo&1,(lo>>1)&1,(lo>>2)&1,(lo>>3)&1, hi&1,(hi>>1)&1,(hi>>2)&1,(hi>>3)&1]
+        .forEach((b,i) => { if(positions[i] !== undefined) bits[positions[i]] = b; });
+    }
+    setBCD(frame,  [0,1,2,3,  8,9,10,null]);
+    setBCD(secs,   [16,17,18,19, 24,25,26,null]);
+    setBCD(mins,   [32,33,34,35, 40,41,42,null]);
+    setBCD(hours,  [48,49,50,51, 56,57,58,null]);
+    [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1].forEach((b,i) => bits[64+i]=b);
+    return bits;
+  }
+
+  function pcm16ToWavUrl(pcm, sampleRate, numChannels){
+    const dataLen = pcm.length * 2;
+    const wavLen  = 44 + dataLen;
+    const ab = new ArrayBuffer(wavLen);
+    const view = new DataView(ab);
+    function ws(off,str){ for(let i=0;i<str.length;i++) view.setUint8(off+i, str.charCodeAt(i)); }
+    ws(0,'RIFF'); view.setUint32(4, wavLen-8, true);
+    ws(8,'WAVE'); ws(12,'fmt ');
+    view.setUint32(16,16,true); view.setUint16(20,1,true);
+    view.setUint16(22,numChannels,true);
+    view.setUint32(24,sampleRate,true);
+    view.setUint32(28,sampleRate*numChannels*2,true);
+    view.setUint16(32,numChannels*2,true);
+    view.setUint16(34,16,true);
+    ws(36,'data'); view.setUint32(40,dataLen,true);
+    for(let i=0;i<pcm.length;i++) view.setInt16(44+i*2, pcm[i], true);
+    const blob = new Blob([ab],{type:'audio/wav'});
+    return URL.createObjectURL(blob);
+  }
+
+  function setupLTCAudio(url){
+    if(!ltcAudioEl){
+      ltcAudioEl = document.createElement('audio');
+      ltcAudioEl.id = 'ltcAudio';
+      ltcAudioEl.style.display = 'none';
+      document.body.appendChild(ltcAudioEl);
+    }
+    ltcAudioEl.src = url;
+    ltcAudioEl.loop = false;
+
+    const mainAudio = document.getElementById('audio');
+
+    // Initialise WebAudio une seule fois
+    if(!audioCtx){
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+      mainSourceNode = audioCtx.createMediaElementSource(mainAudio);
+      ltcSourceNode  = audioCtx.createMediaElementSource(ltcAudioEl);
+
+      mainSplitter = audioCtx.createChannelSplitter(2);
+      ltcSplitter  = audioCtx.createChannelSplitter(2);
+      merger       = audioCtx.createChannelMerger(2);
+
+      mainGainL = audioCtx.createGain();
+      mainGainR = audioCtx.createGain();
+      ltcGainL  = audioCtx.createGain();
+      ltcGainR  = audioCtx.createGain();
+
+      mainSourceNode.connect(mainSplitter);
+      mainSplitter.connect(mainGainL, 0);
+      mainSplitter.connect(mainGainR, 1);
+      mainGainL.connect(merger, 0, 0);
+      mainGainR.connect(merger, 0, 1);
+
+      ltcSourceNode.connect(ltcSplitter);
+      ltcSplitter.connect(ltcGainL, 0);
+      ltcSplitter.connect(ltcGainR, 0);
+      ltcGainL.connect(merger, 0, 0);
+      ltcGainR.connect(merger, 0, 1);
+
+      merger.connect(audioCtx.destination);
+    }
+
+    applyRouting();
+
+    // Sync LTC avec main (une seule fois)
+    if(!ltcActive){
+      mainAudio.addEventListener('play',  () => {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        ltcAudioEl.currentTime = mainAudio.currentTime;
+        ltcAudioEl.play().catch(()=>{});
+      });
+      mainAudio.addEventListener('pause', () => ltcAudioEl.pause());
+      mainAudio.addEventListener('seeked', () => { ltcAudioEl.currentTime = mainAudio.currentTime; });
+    }
+
+    ltcActive = true;
+  }
+
+  function applyRouting(){
+    if(!audioCtx) return;
+    const mode = document.querySelector('input[name="ltcRoute"]:checked')?.value || 'stereo';
+
+    if(mode === 'stereo'){
+      mainGainL.gain.value = 1; mainGainR.gain.value = 1;
+      ltcGainL.gain.value  = 0; ltcGainR.gain.value  = 0;
+      document.getElementById('ltcStatus').textContent = '🔊 Stéréo normale';
+    }
+    else if(mode === 'mainL_ltcR'){
+      mainGainL.gain.value = 1; mainGainR.gain.value = 0;
+      ltcGainL.gain.value  = 0; ltcGainR.gain.value  = 1;
+      document.getElementById('ltcStatus').textContent = '🎵 Main G / LTC D';
+    }
+    else if(mode === 'ltcL_mainR'){
+      mainGainL.gain.value = 0; mainGainR.gain.value = 1;
+      ltcGainL.gain.value  = 1; ltcGainR.gain.value  = 0;
+      document.getElementById('ltcStatus').textContent = '🎛️ LTC G / Main D';
+    }
+  }
+})();
+
+
+
 </script>
 </body>
 </html>
