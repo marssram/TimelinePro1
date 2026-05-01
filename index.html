@@ -262,6 +262,368 @@ body.light-mode .no-block { color: #aaa; }
   border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 4px 12px;
   font-size: 12px; color: #ccc; pointer-events: none; opacity: 0; transition: opacity 0.4s;
 }
+
+/* ===== EASY MODE ===== */
+.easy-mode-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #1a0a2e 0%, #16213e 50%, #0f3460 100%);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 24px;
+  font-family: inherit;
+}
+body.easy-active .easy-mode-screen { display: flex; }
+body.easy-active > *:not(.easy-mode-screen):not(#audio) { display: none !important; }
+
+.easy-title {
+  font-size: 48px;
+  color: white;
+  text-shadow: 3px 3px 0 rgba(0,0,0,0.15);
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+.easy-subtitle {
+  font-size: 18px;
+  color: rgba(255,255,255,0.95);
+  background: rgba(255,255,255,0.2);
+  padding: 10px 20px;
+  border-radius: 30px;
+  backdrop-filter: blur(8px);
+}
+.easy-exit-pill {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  border: 2px solid rgba(255,255,255,0.3);
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  transition: all 0.15s;
+  z-index: 10;
+}
+.easy-exit-pill:hover { background: rgba(255,255,255,0.25); transform: scale(1.1); }
+.easy-exit-pill:active { transform: scale(0.95); }
+
+.easy-exit-btn:hover { transform: scale(1.05); }
+.easy-exit-btn:active { transform: scale(0.95); }
+
+.btn.easy-toggle {
+  background: linear-gradient(180deg, #ffb6c1, #ff8fa3);
+  border-color: #ff8fa3;
+}
+.btn.easy-toggle:hover { filter: brightness(1.1); }
+
+/* ===== EASY MODE - STEP 2 ===== */
+.easy-body {
+  overflow-y: auto;
+  width: 100%;
+  max-width: 900px;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+/* Timeline mini */
+.easy-mini-timeline {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  width: 100%;
+  height: 40px;
+  background: rgba(0,0,0,0.15);
+  border-radius: 12px;
+  overflow: hidden;
+  backdrop-filter: blur(4px);
+  border: 2px solid rgba(255,255,255,0.3);
+}
+.easy-mini-block {
+  position: absolute;
+  top: 4px;
+  height: calc(100% - 8px);
+  border-radius: 6px;
+  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  overflow: hidden;
+  pointer-events: none;
+}
+.easy-mini-cursor {
+  position: absolute;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  background: white;
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(255,255,255,0.9);
+  pointer-events: none;
+  transition: left 0.1s linear;
+}
+
+/* Nom du bloc */
+.easy-block-name {
+  font-size: 42px;
+  font-weight: 900;
+  color: white;
+  text-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+  text-align: center;
+  letter-spacing: 1px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.easy-block-desc {
+  font-size: 16px;
+  color: rgba(255,255,255,0.85);
+  text-align: center;
+  background: rgba(255,255,255,0.15);
+  padding: 8px 20px;
+  border-radius: 20px;
+  min-height: 36px;
+  max-width: 600px;
+  width: 100%;
+  backdrop-filter: blur(4px);
+}
+
+/* ===== EASY MODE - STEP 3 ===== */
+.easy-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.easy-btn {
+  background: rgba(255,255,255,0.25);
+  border: 3px solid rgba(255,255,255,0.5);
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  backdrop-filter: blur(8px);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.easy-btn:hover  { background: rgba(255,255,255,0.4); transform: scale(1.08); }
+.easy-btn:active { transform: scale(0.92); }
+
+.easy-btn.sm { width: 54px; height: 54px; font-size: 20px; }
+.easy-btn.md { width: 66px; height: 66px; font-size: 26px; }
+.easy-btn.lg {
+  width: 90px; height: 90px; font-size: 38px;
+  background: rgba(255,255,255,0.35);
+  border-color: white;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+}
+.easy-btn.lg:hover { background: rgba(255,255,255,0.5); }
+
+/* Temps */
+.easy-time {
+  font-size: 28px;
+  font-weight: 900;
+  color: white;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+  letter-spacing: 3px;
+  font-variant-numeric: tabular-nums;
+  background: rgba(0,0,0,0.15);
+  padding: 8px 24px;
+  border-radius: 30px;
+  backdrop-filter: blur(4px);
+}
+
+/* ===== EASY MODE - STEP 4 ===== */
+.easy-todo-wrap {
+  width: 100%;
+  max-width: 600px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 16px;
+  padding: 16px 20px;
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(255,255,255,0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.easy-todo-wrap::-webkit-scrollbar { width: 4px; }
+.easy-todo-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 2px; }
+
+.easy-todo-empty {
+  color: rgba(255,255,255,0.6);
+  font-style: italic;
+  font-size: 15px;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.easy-todo-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 2px solid transparent;
+}
+.easy-todo-item:hover { background: rgba(255,255,255,0.22); }
+.easy-todo-item.done  { opacity: 0.5; }
+
+.easy-todo-check {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 3px solid rgba(255,255,255,0.7);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: white;
+  transition: all 0.15s;
+}
+.easy-todo-item.done .easy-todo-check {
+  background: rgba(255,255,255,0.6);
+  border-color: transparent;
+}
+.easy-todo-item.done .easy-todo-check::after { content: "✓"; }
+
+.easy-todo-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.easy-todo-text {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+.easy-todo-item.done .easy-todo-text {
+  text-decoration: line-through;
+}
+
+/* Compteur todo */
+.easy-todo-counter {
+  font-size: 14px;
+  color: rgba(255,255,255,0.8);
+  text-align: center;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* ===== EASY MODE - STEP 5 ===== */
+
+/* Bloc suivant preview */
+.easy-next-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0,0,0,0.15);
+  border-radius: 30px;
+  padding: 8px 20px;
+  backdrop-filter: blur(6px);
+  border: 2px solid rgba(255,255,255,0.2);
+  max-width: 400px;
+  width: 100%;
+  justify-content: center;
+}
+.easy-next-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.easy-next-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.easy-next-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.9);
+}
+
+/* Barre de progression du bloc */
+.easy-block-progress {
+  width: 100%;
+  max-width: 600px;
+  height: 8px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.easy-block-progress-bar {
+  height: 100%;
+  border-radius: 8px;
+  background: white;
+  width: 0%;
+  transition: width 0.1s linear;
+  box-shadow: 0 0 10px rgba(255,255,255,0.6);
+}
+
+/* Animations d'entrée */
+@keyframes easyFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.easy-screen > * {
+  animation: easyFadeUp 0.4s ease forwards;
+}
+.easy-screen > *:nth-child(1) { animation-delay: 0.05s; }
+.easy-screen > *:nth-child(2) { animation-delay: 0.10s; }
+.easy-screen > *:nth-child(3) { animation-delay: 0.15s; }
+.easy-screen > *:nth-child(4) { animation-delay: 0.20s; }
+.easy-screen > *:nth-child(5) { animation-delay: 0.25s; }
+.easy-screen > *:nth-child(6) { animation-delay: 0.30s; }
+.easy-screen > *:nth-child(7) { animation-delay: 0.35s; }
+.easy-screen > *:nth-child(8) { animation-delay: 0.40s; }
+
+
+/* Paysage optimisé */
+@media (orientation: landscape) and (max-height: 500px) {
+  .easy-screen { padding: 10px 20px; gap: 8px; }
+  .easy-block-name { font-size: 28px; min-height: 36px; }
+  .easy-btn.lg { width: 68px; height: 68px; font-size: 28px; }
+  .easy-btn.md { width: 52px; height: 52px; font-size: 20px; }
+  .easy-btn.sm { width: 42px; height: 42px; font-size: 16px; }
+  .easy-time   { font-size: 20px; padding: 6px 16px; }
+  .easy-todo-wrap { max-height: 120px; }
+}
+
+
 </style>
 </head>
 <body>
@@ -294,6 +656,7 @@ body.light-mode .no-block { color: #aaa; }
   <button class="btn sq" id="disp2">2</button>
   <button class="btn sq" id="disp3">3</button>
   <button class="btn sq" id="themeBtn" title="Thème">🌙</button>
+  <button class="btn sq easy-toggle" id="easyBtn" title="Easy Mode (tournage)">🍼</button>
   <div class="time-badge" id="timeBadge">00:00 / 00:00</div>
   <div class="master-wrap" id="masterWrap" title="Progression globale">
     <span>✅</span>
@@ -455,6 +818,50 @@ body.light-mode .no-block { color: #aaa; }
     <div id="ltcStatus" style="font-size:11px; color:#888; min-height:16px; margin-top:4px;"></div>
   </div>
 </div>
+
+<!-- ===== EASY MODE SCREEN ===== -->
+<div class="easy-mode-screen easy-screen" id="easyScreen">
+  <button class="easy-exit-pill" id="easyExitBtn">🍼</button>
+  <div class="easy-body">
+
+
+
+    <!-- Timeline mini -->
+    <div class="easy-mini-timeline" id="easyMiniTL">
+      <div class="easy-mini-cursor" id="easyMiniCursor"></div>
+    </div>
+
+        <!-- Nom du bloc actuel -->
+    <div class="easy-block-name" id="easyBlockName">• • •</div>
+    <div class="easy-block-desc" id="easyBlockDesc"></div>
+
+        <!-- Temps -->
+    <div class="easy-time" id="easyTime">00:00 / 00:00</div>
+
+        <!-- Barre progression bloc -->
+    <div class="easy-block-progress">
+      <div class="easy-block-progress-bar" id="easyBlockBar"></div>
+    </div>
+
+    <!-- Todo du bloc -->
+    <div class="easy-todo-counter" id="easyTodoCounter"></div>
+    <div class="easy-todo-wrap" id="easyTodoWrap"></div>
+
+
+    <!-- Contrôles -->
+    <div class="easy-controls">
+      <button class="easy-btn sm" id="easyPrevBlock" title="Bloc précédent">⏮</button>
+      <button class="easy-btn md" id="easyLL"        title="Reculer vite">⏪</button>
+      <button class="easy-btn lg" id="easyPlay"      title="Play / Pause">▶️</button>
+      <button class="easy-btn md" id="easyRR"        title="Avancer vite">⏩</button>
+      <button class="easy-btn sm" id="easyNextBlock" title="Bloc suivant">⏭</button>
+    </div>
+
+   
+
+  </div>
+</div>
+
 
 
 <audio id="audio"></audio>
@@ -1166,6 +1573,222 @@ document.getElementById('masterToggle').onclick = () => {
   document.getElementById('masterBody').style.display = state.masterOpen ? 'block' : 'none';
   document.getElementById('masterToggle').textContent = state.masterOpen ? '▲ Réduire' : '▼ Ouvrir';
 };
+
+/* =====================================================
+   EASY MODE
+   ===================================================== */
+let easyRafId = null;
+
+function easyGetCurrentBlock(){
+  const tl = getTL(state.activeTimeline);
+  const t = audio.currentTime || 0;
+  return tl.blocks.find(b => t >= b.start && t < b.start + b.duration) || null;
+}
+
+function easyRenderMiniTL(){
+  const container = document.getElementById('easyMiniTL');
+  // Nettoyer les anciens blocs (garder le curseur)
+  Array.from(container.querySelectorAll('.easy-mini-block')).forEach(el => el.remove());
+
+  const tl = getTL(state.activeTimeline);
+  const blocks = tl.blocks;
+  if(!blocks.length) return;
+
+  const totalDur = blocks.reduce((mx, b) => Math.max(mx, b.start + b.duration), 0) || 1;
+
+  blocks.forEach(b => {
+    const div = document.createElement('div');
+    div.className = 'easy-mini-block';
+    div.style.left   = (b.start / totalDur * 100) + '%';
+    div.style.width  = (b.duration / totalDur * 100) + '%';
+    div.style.background = b.black ? '#222' : (b.color || '#555');
+    div.textContent = b.label || '';
+    container.insertBefore(div, document.getElementById('easyMiniCursor'));
+  });
+}
+
+function easyUpdateCursor(){
+  const tl = getTL(state.activeTimeline);
+  const blocks = tl.blocks;
+  const totalDur = blocks.reduce((mx, b) => Math.max(mx, b.start + b.duration), 0) || 1;
+  const t = audio.currentTime || 0;
+  const pct = Math.min(1, t / totalDur) * 100;
+  document.getElementById('easyMiniCursor').style.left = pct + '%';
+}
+
+function easyUpdateBlockInfo(){
+  const b = easyGetCurrentBlock();
+  const nameEl = document.getElementById('easyBlockName');
+  const descEl = document.getElementById('easyBlockDesc');
+  if(b){
+    nameEl.textContent = b.label || '—';
+    descEl.textContent = b.desc  || '';
+  } else {
+    nameEl.textContent = '• • •';
+    descEl.textContent = '';
+  }
+}
+
+function easyFmt(s){
+  const m = Math.floor(s/60);
+  const sec = Math.floor(s%60);
+  return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+}
+
+function easyUpdateTime(){
+  const t   = audio.currentTime || 0;
+  const dur = isFinite(audio.duration) ? audio.duration : 0;
+  document.getElementById('easyTime').textContent = easyFmt(t)+' / '+easyFmt(dur);
+}
+
+function easyRenderTodo(){
+  const b    = easyGetCurrentBlock();
+  const wrap = document.getElementById('easyTodoWrap');
+  const ctr  = document.getElementById('easyTodoCounter');
+  wrap.innerHTML = '';
+
+  if(!b || !b.todos || !b.todos.length){
+    ctr.textContent = '';
+    wrap.innerHTML = '<div class="easy-todo-empty">Aucune tâche pour ce bloc</div>';
+    return;
+  }
+
+  const done  = b.todos.filter(t => t.done).length;
+  const total = b.todos.length;
+  ctr.textContent = `✅ ${done} / ${total}`;
+
+  b.todos.forEach((task, i) => {
+    const cat = COLORS.find(c => c.id === task.cat) || COLORS[0];
+
+    const item = document.createElement('div');
+    item.className = 'easy-todo-item' + (task.done ? ' done' : '');
+
+    const check = document.createElement('div');
+    check.className = 'easy-todo-check';
+
+    const dot = document.createElement('div');
+    dot.className = 'easy-todo-dot';
+    dot.style.background = cat.hex;
+
+    const txt = document.createElement('div');
+    txt.className = 'easy-todo-text';
+    txt.textContent = task.text;
+
+    item.appendChild(check);
+    item.appendChild(dot);
+    item.appendChild(txt);
+
+    item.onclick = () => {
+      task.done = !task.done;
+      updateMasterList();
+      updateMasterProgress();
+      renderAll();
+      saveToStorage();
+      easyRenderTodo();
+    };
+
+    wrap.appendChild(item);
+  });
+}
+
+let easyLastBlock  = null;
+let easyLastBLabel = null;
+
+function easyUpdateBlockProgress(){
+  const b = easyGetCurrentBlock();
+  if(!b){ document.getElementById('easyBlockBar').style.width = '0%'; return; }
+  const t    = audio.currentTime || 0;
+  const pct  = Math.min(1, Math.max(0, (t - b.start) / (b.duration || 1))) * 100;
+  document.getElementById('easyBlockBar').style.width = pct + '%';
+  // Couleur de la barre = couleur du bloc
+  document.getElementById('easyBlockBar').style.background = b.color || 'white';
+}
+
+
+function easyLoop(){
+  easyUpdateCursor();
+  easyUpdateBlockInfo();
+  easyUpdateTime();
+  easyUpdateBlockProgress();
+
+
+  // Re-render todo + flash si le bloc change
+  const cur = easyGetCurrentBlock();
+  if(cur !== easyLastBlock){
+    easyLastBlock = cur;
+    easyRenderTodo();
+  }
+
+
+  easyRafId = requestAnimationFrame(easyLoop);
+}
+
+
+
+/* --- Contrôles Easy --- */
+document.getElementById('easyPlay').onclick = () => {
+  if(!isFinite(audio.duration)) return;
+  if(state.isPlaying){
+    audio.pause(); state.isPlaying = false;
+    document.getElementById('easyPlay').textContent = '▶️';
+    document.getElementById('playBtn').textContent  = '▶️';
+  } else {
+    audio.play(); state.isPlaying = true;
+    document.getElementById('easyPlay').textContent = '⏸️';
+    document.getElementById('playBtn').textContent  = '⏸️';
+  }
+};
+
+// Avance / recul continu (maintien)
+let easyMoveInt = null;
+function easyStartMove(dir, fast){
+  clearInterval(easyMoveInt);
+  easyMoveInt = setInterval(() => {
+    if(!isFinite(audio.duration)) return;
+    audio.currentTime = Math.max(0, Math.min(audio.duration, audio.currentTime + dir*(fast?0.5:0.1)));
+  }, 16);
+}
+function easyStopMove(){ clearInterval(easyMoveInt); }
+
+document.getElementById('easyLL').onmousedown = () => easyStartMove(-1, true);
+document.getElementById('easyRR').onmousedown = () => easyStartMove( 1, true);
+document.getElementById('easyLL').ontouchstart = (e) => { e.preventDefault(); easyStartMove(-1, true); };
+document.getElementById('easyRR').ontouchstart = (e) => { e.preventDefault(); easyStartMove( 1, true); };
+window.addEventListener('mouseup',  easyStopMove);
+window.addEventListener('touchend', easyStopMove);
+
+// Bloc précédent / suivant
+document.getElementById('easyPrevBlock').onclick = () => {
+  const tl = getTL(state.activeTimeline);
+  const t  = audio.currentTime || 0;
+  const prev = tl.blocks.filter(b => b.start < t - 0.1).sort((a,b) => b.start - a.start)[0];
+  if(prev) audio.currentTime = prev.start;
+};
+document.getElementById('easyNextBlock').onclick = () => {
+  const tl = getTL(state.activeTimeline);
+  const t  = audio.currentTime || 0;
+  const next = tl.blocks.filter(b => b.start > t + 0.1).sort((a,b) => a.start - b.start)[0];
+  if(next) audio.currentTime = next.start;
+};
+
+
+document.getElementById('easyBtn').onclick = () => {
+  document.body.classList.add('easy-active');
+  easyLastBlock = null;
+  easyRenderMiniTL();
+  easyRenderTodo();
+  easyLoop();
+};
+
+
+document.getElementById('easyExitBtn').onclick = () => {
+  document.body.classList.remove('easy-active');
+  if(easyRafId) cancelAnimationFrame(easyRafId);
+  easyRafId = null;
+};
+
+
+
 document.getElementById('masterWrap').onclick = () => {
   document.getElementById('masterToggle').click();
 };
