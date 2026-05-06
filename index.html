@@ -794,7 +794,8 @@ body.easy-active::-webkit-scrollbar {
   <button class="btn sq" id="themeBtn" title="Thème">🌙</button>
   <button class="btn easy-toggle" id="easyBtn" title="Easy Mode (tournage)" style="width:54px;height:54px;font-size:28px;border-radius:16px;">🍼</button>
 
-  <input type="file" id="audioFile" accept="audio/*" style="display:none">
+  <input type="file" id="audioFile" accept="*/*"
+ style="display:none">
   <div class="time-badge" id="timeBadge">00:00 / 00:00</div>
   <div class="master-wrap" id="masterWrap" title="Progression globale">
     <span>✅</span>
@@ -851,7 +852,6 @@ body.easy-active::-webkit-scrollbar {
   <div class="ctrl-grp">
     <button class="btn sq" id="rBtn">▶</button>
     <button class="btn sq" id="rrBtn">⏩</button>
-    <button class="btn sq" id="ltcBtn">🎛️</button>
   </div>
 </div>
 
@@ -931,13 +931,13 @@ body.easy-active::-webkit-scrollbar {
       Routing audio :
       <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
         <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-          <input type="radio" name="ltcRoute" value="stereo" checked> 🔊 Main stéréo (G+D)
+          <input type="radio" name="ltcRoute" value="stereo" checked> Main stéréo (G+D)
         </label>
         <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-          <input type="radio" name="ltcRoute" value="mainL_ltcR"> 🎵 Main G / LTC D
+          <input type="radio" name="ltcRoute" value="mainL_ltcR"> Main G / LTC D
         </label>
         <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-          <input type="radio" name="ltcRoute" value="ltcL_mainR"> 🎛️ LTC G / Main D
+          <input type="radio" name="ltcRoute" value="ltcL_mainR"> LTC G / Main D
         </label>
       </div>
     </div>
