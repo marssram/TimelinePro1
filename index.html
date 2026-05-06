@@ -2114,7 +2114,6 @@ document.addEventListener('DOMContentLoaded', function(){
   const LTC_FPS      = 25;
   const LTC_SR       = 48000;
   const LTC_BITS     = 16;
-  const LTC_DURATION = 7200;
 
   let ltcActive = false;
   let audioCtx = null;
@@ -2139,25 +2138,34 @@ document.addEventListener('DOMContentLoaded', function(){
   };
 
   // Générer LTC WAV
-  document.getElementById('ltcGenBtn').onclick = () => {
-    document.getElementById('ltcStatus').textContent = '⏳ Génération...';
-    setTimeout(() => {
-      try {
-        const url = generateLTCWav(LTC_DURATION, LTC_FPS, LTC_SR, LTC_OFFSET * LTC_FPS);
-        setupLTCAudio(url);
-        document.getElementById('ltcStatus').textContent = '✅ LTC généré (10:00:00:00, 25fps)';
-      } catch(err) {
-        document.getElementById('ltcStatus').textContent = '❌ Erreur : ' + err.message;
-      }
-    }, 50);
-  };
+  document.getElementById('ltcGenBtn').onclick = async () => {
+  const mainAudio = document.getElementById('audio');
+  let duration = mainAudio && isFinite(mainAudio.duration) ? mainAudio.duration : 0;
+  if(!duration || duration < 1){
+    document.getElementById('ltcStatus').textContent = '⚠️ Charge d\'abord un fichier audio';
+    return;
+  }
+  const ltcDuration = Math.ceil(duration) + 10;
+  document.getElementById('ltcStatus').textContent = `⏳ Génération ${ltcDuration}s...`;
+  await new Promise(r => setTimeout(r, 50));
+  try {
+    const url = await generateLTCWavAsync(ltcDuration, LTC_FPS, LTC_SR, LTC_OFFSET * LTC_FPS);
+    setupLTCAudio(url);
+    const mm = Math.floor(ltcDuration/60), ss = ltcDuration%60;
+    document.getElementById('ltcStatus').textContent = `✅ LTC généré (${mm}:${ss.toString().padStart(2,'0')}, start 10:00:00:00)`;
+  } catch(err) {
+    document.getElementById('ltcStatus').textContent = '❌ ' + err.message;
+    console.error(err);
+  }
+};
+
 
   // Listener radios routing
   document.querySelectorAll('input[name="ltcRoute"]').forEach(r => {
     r.addEventListener('change', applyRouting);
   });
 
-  function generateLTCWav(durationSec, fps, sampleRate, startFrame){
+  async function generateLTCWavAsync(durationSec, fps, sampleRate, startFrame){
     const samplesPerFrame = sampleRate / fps;
     const totalFrames = Math.ceil(durationSec * fps);
     const totalSamples = Math.ceil(totalFrames * samplesPerFrame);
@@ -2191,9 +2199,23 @@ document.addEventListener('DOMContentLoaded', function(){
         }
       }
       sampleIdx += samplesThisFrame;
+          if(f % 500 === 0){
+      const pct = Math.round(f/totalFrames*100);
+      document.getElementById('ltcStatus').textContent = `⏳ Génération... ${pct}%`;
+      await new Promise(r => setTimeout(r, 0));
     }
 
-    return pcm16ToWavUrl(buffer, sampleRate, 1);
+    }
+
+        const _stereo = new Int16Array(buffer.length * 2);
+    for(let i=0; i<buffer.length; i++){
+      _stereo[i*2]   = buffer[i];
+      _stereo[i*2+1] = buffer[i];
+    }
+    return pcm16ToWavUrl(_stereo, sampleRate, 2);
+
+
+
   }
 
   function buildLTCBits(frame, secs, mins, hours, fps){
@@ -2268,7 +2290,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
       ltcSourceNode.connect(ltcSplitter);
       ltcSplitter.connect(ltcGainL, 0);
-      ltcSplitter.connect(ltcGainR, 0);
+      ltcSplitter.connect(ltcGainR, 1);
       ltcGainL.connect(merger, 0, 0);
       ltcGainR.connect(merger, 0, 1);
 
